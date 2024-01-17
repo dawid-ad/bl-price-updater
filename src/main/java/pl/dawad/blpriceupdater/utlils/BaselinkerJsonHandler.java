@@ -37,7 +37,7 @@ public class BaselinkerJsonHandler {
 
                         products.add(new BaselinkerProduct(
                                     productIdElement.isJsonNull() ? null : productIdElement.getAsString(),
-                                    eanElement.isJsonNull() ? null : eanElement.getAsString().replace(" ", ""),
+                                    eanElement.isJsonNull() ? null : eanElement.getAsString().replace(" ", "").replace("\t",""),
                                     skuElement.isJsonNull() ? null : skuElement.getAsString(),
                                     nameElement.isJsonNull() ? null : nameElement.getAsString(),
                                     priceBruttoElement.isJsonNull() ? 0.0 : priceBruttoElement.getAsDouble()

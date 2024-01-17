@@ -4,38 +4,46 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import pl.dawad.blpriceupdater.dao.entity.AllegroProduct;
-import pl.dawad.blpriceupdater.manager.CsvService;
-import pl.dawad.blpriceupdater.manager.ProductManager;
+import org.springframework.context.ConfigurableApplicationContext;
+import pl.dawad.blpriceupdater.manager.ProductService;
+import pl.dawad.blpriceupdater.utlils.EmailNotificationService;
 
 @SpringBootApplication
 public class BlPriceUpdaterApplication {
-	private final ProductManager productManager;
-	private final CsvService csvService;
+	private final ProductService productService;
+	private final EmailNotificationService emailNotificationService;
 	@Autowired
-	public BlPriceUpdaterApplication(ProductManager productManager, CsvService csvService) {
-		this.productManager = productManager;
-		this.csvService = csvService;
+	public BlPriceUpdaterApplication(ProductService productService, EmailNotificationService emailNotificationService, ConfigurableApplicationContext context) {
+		this.productService = productService;
+		this.emailNotificationService = emailNotificationService;
 	}
 
 	public static void main(String[] args) {
 		SpringApplication.run(BlPriceUpdaterApplication.class, args);
+		System.exit(0);
 	}
 	@PostConstruct
 	public void init() {
-    		productManager.updateAllBaseLinkerProducts();
-			productManager.updateAllAllegroProducts();
+		try{
+      			productService.downloadAllBaseLinkerProducts();
+      			productService.exportBaselinkerDb();
 
-    //    		productManager.printAllAllegroProducts();
-    //			productManager.printAllBaseLinkerProducts();
+      			productService.downloadAllAllegroProducts();
+      			productService.exportAllegroDb();
 
-    		productManager.addAllegroProduct(new AllegroProduct("123","5905514135031",null,"GŁOŚNIK PRZENOŚNY BLUETOOTH BOSE SOUNDLINK FLEX NIEBIESKI",100000.00));
-    		productManager.addAllegroProduct(new AllegroProduct("34234","5905514135031",null,"GŁOŚNIK PRZENOŚNY BLUETOOTH BOSE SOUNDLINK FLEX NIEBIESKI",500.00));
-    		productManager.addAllegroProduct(new AllegroProduct("1423422","5905514135031",null,"GŁOŚNIK PRZENOŚNY BLUETOOTH BOSE SOUNDLINK FLEX NIEBIESKI",45000.67));
-    		productManager.addAllegroProduct(new AllegroProduct("1423423","5905514135031",null,"GŁOŚNIK PRZENOŚNY BLUETOOTH BOSE SOUNDLINK FLEX NIEBIESKI",15505.00));
+      			productService.updatePricesOnline();
+      			productService.exportUpdatedProducts();
+      			productService.checkUpdatedProducts();
+		} catch (Exception e) {
+			handleFailure(e);
+		}
 
-			csvService.exportAllegroDb();
-			csvService.exportBaselinkerDb();
-//			productManager.updatePricesOnline();
+	}
+	public void handleFailure(Exception e) {
+		String errorMessage = "Application failed. Error: " + e.getMessage();
+		emailNotificationService.sendErrorNotification("BaseLinker price updater error.", errorMessage);
+		System.err.println(errorMessage); // Print error details to console
+		e.printStackTrace();
+		System.exit(1);
 	}
 }

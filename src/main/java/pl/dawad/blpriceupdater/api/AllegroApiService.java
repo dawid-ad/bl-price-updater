@@ -42,11 +42,12 @@ public class AllegroApiService {
         String response;
         do{
             response = getAllProductsFromPage(offset);
+            System.out.println("Status Allegro: " + offset + " products downloaded.");
             if(response == null){
                 return responses;
             }
             responses.add(response);
-            offset += 1000;
+            offset += 100;
         } while (true);
     }
     public String getAllProductsFromPage(int offset) {
@@ -55,7 +56,7 @@ public class AllegroApiService {
         }
         String response =  webClientGetters.get()
                 .uri(uriBuilder -> uriBuilder.path("/sale/offers")
-                        .queryParam("limit", 1000)
+                        .queryParam("limit", 100)
                         .queryParam("offset", offset)
                         .build())
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
@@ -63,7 +64,6 @@ public class AllegroApiService {
                 .retrieve()
                 .bodyToMono(String.class)
                 .block();
-    System.out.println(response);
         return isPageEmpty(response) ? null : response;
     }
     private boolean isPageEmpty(String response) {
@@ -73,7 +73,6 @@ public class AllegroApiService {
         return response.contains("\"count\":0");
     }
     public String getResponseForOneAllegroProduct(String allegroId) {
-    System.out.println(token);
         if (token == null){
             token = getToken();
         }
